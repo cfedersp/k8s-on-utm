@@ -14,8 +14,9 @@
             { "dst": "0.0.0.0/0" }
         ],
         "ranges": [
-            [{ "subnet": "10.85.0.0/20" }]
-        ]
+            [{ "subnet": "10.85.0.0/24" }]
+        ],
+        "dataDir": "/run/crio/container-ipam-state"
       }
     }
   ]
