@@ -26,9 +26,10 @@ for idx, nodeIp in enumerate(args.nodeIps):
   routeCmd = assembleRouteCmd(workerIp, nodeIp, args.cniInterface)
   allRoutes.append(routeCmd);
 
-for idx, nodeIp in enumerate(args.nodeIps):
-  routes = [route for route in allRoutes if nodeIp not in route]
+for nodeIndex, nodeIp in enumerate(args.nodeIps):
+  print(nodeIp);
+  routes = [route for routeIndex, route in enumerate(allRoutes) if nodeIndex != routeIndex] #if nodeIp not in route]
   [print(x) for x in routes]
-  print("");
+  print("\n");
 
 
