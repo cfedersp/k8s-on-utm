@@ -17,7 +17,7 @@ ipBytes = args.startAddress.split(".")
 print(len(args.nodeIps));
 
 def assembleRouteCmd(workerIp, nodeIp, cniInterface):
-  return f"sudo ip route add \"{workerIp}\" via \"{nodeIp}\""
+  return f"sudo ip route add \"{workerIp}/24\" via \"{nodeIp}\""
 
 allRoutes = []
 for idx, nodeIp in enumerate(args.nodeIps):

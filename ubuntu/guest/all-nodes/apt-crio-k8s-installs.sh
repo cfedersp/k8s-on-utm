@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e -x
 
-apt install net-tools parted lvm2 netcat-openbsd zip git apt-transport-https ca-certificates curl gnupg2 software-properties-common jo -y
+apt install net-tools parted lvm2 netcat-openbsd zip git apt-transport-https ca-certificates curl gnupg2 software-properties-common jo linux-modules-extra-$(uname -r) -y
 KUBERNETES_VERSION=1.28
 CRIO_VERSION=1.28.2
 
@@ -19,6 +19,7 @@ swapoff -a
 modprobe overlay
 modprobe br_netfilter
 modprobe nf_conntrack
+modprobe nvme-tcp
 cp /etc/fstab /etc/fstab.orig
 grep -v swap /etc/fstab.orig > /etc/fstab
 
@@ -27,6 +28,7 @@ echo "net.netfilter.nf_conntrack_max = 131072" >> /etc/sysctl.conf
 echo "net.nf_conntrack_max = 131072" >> /etc/sysctl.conf
 printf "overlay\nbr_netfilter\nnf_conntrack\n" > /etc/modules-load.d/kubernetes.conf
 printf "net.bridge.bridge-nf-call-iptables  = 1\nnet.bridge.bridge-nf-call-ip6tables = 1\nnet.ipv4.ip_forward                 = 1" > /etc/sysctl.d/kubernetes.conf
+echo 'nvme-tcp' | sudo tee -a /etc/modules-load.d/microk8s-mayastor.conf
 ##  cp -r /etc/crio/crio.conf.d /etc/crio/crio.conf.d.orig
 
 sysctl --system
