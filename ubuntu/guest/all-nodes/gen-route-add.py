@@ -1,23 +1,35 @@
 import argparse
+import socket
+import fcntl
+import struct
 
 # gen-route-add.py cni $(route | grep default | awk '{print $NF}') 10.85.0.0 192.168.64.29 192.168.64.33 192.168.64.35
 
 parser = argparse.ArgumentParser(prog='ProgramName');
 parser.add_argument('cniInterface');
-parser.add_argument('defaultInterface');
+parser.add_argument('clusterInterface');
 parser.add_argument('startAddress');
 parser.add_argument('nodeIps', nargs='*');
 args = parser.parse_args();
 
 print(args.cniInterface);
-print(args.defaultInterface);
+print(args.clusterInterface);
 print(args.startAddress);
 
 ipBytes = args.startAddress.split(".")
 print(len(args.nodeIps));
 
 def assembleRouteCmd(workerIp, nodeIp, cniInterface):
-  return f"sudo ip route add \"{workerIp}/24\" via \"{nodeIp}\""
+  return f"ip route add \"{workerIp}/24\" via \"{nodeIp}\""
+
+def get_interface_ip(ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        return socket.inet_ntoa(fcntl.ioctl(
+                s.fileno(),
+                0x8915,  # SIOCGIFADDR
+                struct.pack('256s', bytes(ifname[:15], 'utf-8'))
+                # Python 2.7: remove the second argument for the bytes call
+            )[20:24])
 
 allRoutes = []
 for idx, nodeIp in enumerate(args.nodeIps):
@@ -26,10 +38,17 @@ for idx, nodeIp in enumerate(args.nodeIps):
   routeCmd = assembleRouteCmd(workerIp, nodeIp, args.cniInterface)
   allRoutes.append(routeCmd);
 
-for nodeIndex, nodeIp in enumerate(args.nodeIps):
-  print(nodeIp);
-  routes = [route for routeIndex, route in enumerate(allRoutes) if nodeIndex != routeIndex] #if nodeIp not in route]
-  [print(x) for x in routes]
-  print("\n");
+host_ip = get_interface_ip(args.clusterInterface)
+
+print("Host IP: ",host_ip);
+
+with open(args.cniInterface + "-routes.sh", "w") as f:
+  f.write("#!/bin/bash -e -x\n\n")
+
+  for nodeIndex, nodeIp in enumerate(args.nodeIps):
+    print(nodeIp);
+    routesFromThisNode = [route for routeIndex, route in enumerate(allRoutes) if nodeIndex != routeIndex] #if nodeIp not in route]
+    if host_ip == nodeIp:
+      [f.write(x + '\n') for x in routesFromThisNode]
 
 
