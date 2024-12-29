@@ -3,7 +3,7 @@ import socket
 import fcntl
 import struct
 
-# gen-route-add.py cni $(route | grep default | awk '{print $NF}') 10.85.0.0 192.168.64.29 192.168.64.33 192.168.64.35
+# python3 /usr/share/host/guest/all-nodes/gen-route-add.py cni $(route | grep default | awk '{print $NF}') 10.85.0.0 $(kubectl get nodes -o json | jq -j '[.items[].status.addresses[0].address] | join(" ")')
 
 parser = argparse.ArgumentParser(prog='ProgramName');
 parser.add_argument('cniInterface');
